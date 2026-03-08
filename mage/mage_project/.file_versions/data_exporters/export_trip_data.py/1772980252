@@ -1,0 +1,142 @@
+if 'data_exporter' not in globals():
+    from mage_ai.data_preparation.decorators import data_exporter
+
+import os
+from sqlalchemy import create_engine, text
+
+
+def get_postgres_engine():
+    host = os.getenv('POSTGRES_HOST', 'postgres')
+    port = os.getenv('POSTGRES_PORT', '5432')
+    db = os.getenv('POSTGRES_DB')
+    user = os.getenv('POSTGRES_USER')
+    password = os.getenv('POSTGRES_PASSWORD')
+
+    if not all([host, port, db, user, password]):
+        raise ValueError('Postgres environment variables are incomplete')
+
+    conn_str = f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}'
+    return create_engine(conn_str)
+
+
+@data_exporter
+def export_data(data, *args, **kwargs):
+    trips_df = data['trips_df'].copy()
+    zones_df = data['zones_df'].copy()
+    audit_df = data['audit_df'].copy()
+
+    engine = get_postgres_engine()
+
+    with engine.begin() as conn:
+        conn.execute(text('CREATE SCHEMA IF NOT EXISTS bronze;'))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bronze.trips_raw (
+                vendorid TEXT NULL,
+                tpep_pickup_datetime TIMESTAMP NULL,
+                tpep_dropoff_datetime TIMESTAMP NULL,
+                lpep_pickup_datetime TIMESTAMP NULL,
+                lpep_dropoff_datetime TIMESTAMP NULL,
+                passenger_count NUMERIC NULL,
+                trip_distance NUMERIC NULL,
+                ratecodeid NUMERIC NULL,
+                store_and_fwd_flag TEXT NULL,
+                pulocationid INTEGER NULL,
+                dolocationid INTEGER NULL,
+                payment_type NUMERIC NULL,
+                fare_amount NUMERIC NULL,
+                extra NUMERIC NULL,
+                mta_tax NUMERIC NULL,
+                tip_amount NUMERIC NULL,
+                tolls_amount NUMERIC NULL,
+                improvement_surcharge NUMERIC NULL,
+                total_amount NUMERIC NULL,
+                congestion_surcharge NUMERIC NULL,
+                airport_fee NUMERIC NULL,
+                ingest_ts TIMESTAMP NOT NULL,
+                source_month VARCHAR(7) NOT NULL,
+                service_type VARCHAR(10) NOT NULL
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bronze.taxi_zone_lookup (
+                locationid INTEGER,
+                borough TEXT,
+                zone TEXT,
+                service_zone TEXT,
+                ingest_ts TIMESTAMP NOT NULL
+            );
+        """))
+
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bronze.ingest_audit (
+                year_month VARCHAR(7),
+                service_type VARCHAR(10),
+                status TEXT,
+                row_count BIGINT,
+                source_url TEXT,
+                ingest_ts TIMESTAMP
+            );
+        """))
+
+        months_services = (
+            trips_df[['source_month', 'service_type']]
+            .drop_duplicates()
+            .to_dict(orient='records')
+        )
+
+        for row in months_services:
+            conn.execute(
+                text("""
+                    DELETE FROM bronze.trips_raw
+                    WHERE source_month = :source_month
+                      AND service_type = :service_type
+                """),
+                {
+                    'source_month': row['source_month'],
+                    'service_type': row['service_type'],
+                }
+            )
+
+        conn.execute(text('TRUNCATE TABLE bronze.taxi_zone_lookup;'))
+
+    trips_df.columns = [c.lower() for c in trips_df.columns]
+    zones_df.columns = [c.lower() for c in zones_df.columns]
+    audit_df.columns = [c.lower() for c in audit_df.columns]
+
+    trips_df.to_sql(
+        'trips_raw',
+        engine,
+        schema='bronze',
+        if_exists='append',
+        index=False,
+        chunksize=50000,
+        method='multi',
+    )
+
+    zones_df.to_sql(
+        'taxi_zone_lookup',
+        engine,
+        schema='bronze',
+        if_exists='append',
+        index=False,
+        chunksize=1000,
+        method='multi',
+    )
+
+    audit_df.to_sql(
+        'ingest_audit',
+        engine,
+        schema='bronze',
+        if_exists='append',
+        index=False,
+        chunksize=1000,
+        method='multi',
+    )
+
+    return {
+        'trips_inserted': len(trips_df),
+        'zones_inserted': len(zones_df),
+        'audit_rows': len(audit_df),
+    }

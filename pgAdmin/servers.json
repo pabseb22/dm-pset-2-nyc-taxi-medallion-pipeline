@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "DM Postgres (warehouse)",
+      "Group": "Data Mining",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "nyc_taxi",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}

@@ -1,3 +1,13 @@
+# From Project DM Pset 2: NYC Taxi Medallion Pipeline
+.env
+
+# mage (si Mage crea carpetas internas pesadas)
+mage/**/mage_data/
+mage/**/.mage/
+mage/**/logs/
+
+# Gitignore python template:
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
