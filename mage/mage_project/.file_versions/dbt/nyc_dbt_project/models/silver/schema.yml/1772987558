@@ -1,0 +1,19 @@
+version: 2
+
+models:
+
+  - name: silver_trips_unified
+
+    columns:
+
+      - name: pickup_datetime
+        tests:
+          - not_null
+
+      - name: pu_location_id
+        tests:
+          - not_null
+
+      - name: do_location_id
+        tests:
+          - not_null

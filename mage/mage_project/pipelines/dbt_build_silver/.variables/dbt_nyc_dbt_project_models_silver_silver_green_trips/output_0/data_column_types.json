@@ -1,0 +1,1 @@
+{"vendor_id": "int64", "pickup_datetime": "str", "dropoff_datetime": "str", "passenger_count": "Decimal", "trip_distance": "Decimal", "pu_location_id": "int64", "do_location_id": "int64", "payment_type": "Decimal", "fare_amount": "Decimal", "tip_amount": "Decimal", "total_amount": "Decimal", "service_type": "str", "source_month": "str", "ingest_ts": "datetime64[ns]"}

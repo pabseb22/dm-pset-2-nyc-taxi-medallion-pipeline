@@ -1,0 +1,1 @@
+{"locationid": "int64", "borough": "str", "zone": "str", "service_zone": "str", "ingest_ts": "datetime64[ns]"}

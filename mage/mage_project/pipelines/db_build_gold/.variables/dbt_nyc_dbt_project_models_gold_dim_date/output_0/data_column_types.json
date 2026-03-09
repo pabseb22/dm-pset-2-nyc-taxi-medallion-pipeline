@@ -1,0 +1,1 @@
+{"date_key": "int64", "full_date": "date", "year": "Decimal", "month": "Decimal", "month_name": "str", "quarter": "Decimal", "day_of_month": "Decimal", "day_of_week": "Decimal", "weekday_name": "str"}

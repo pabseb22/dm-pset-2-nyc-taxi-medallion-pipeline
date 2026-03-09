@@ -1,0 +1,18 @@
+SELECT
+    CAST(vendorid AS INTEGER) AS vendor_id,
+    CAST(lpep_pickup_datetime AS TIMESTAMP) AS pickup_datetime,
+    CAST(lpep_dropoff_datetime AS TIMESTAMP) AS dropoff_datetime,
+    CAST(passenger_count AS NUMERIC) AS passenger_count,
+    CAST(trip_distance AS NUMERIC) AS trip_distance,
+    CAST(pulocationid AS INTEGER) AS pu_location_id,
+    CAST(dolocationid AS INTEGER) AS do_location_id,
+    CAST(payment_type AS INTEGER) AS payment_type,
+    CAST(fare_amount AS NUMERIC) AS fare_amount,
+    CAST(tip_amount AS NUMERIC) AS tip_amount,
+    CAST(total_amount AS NUMERIC) AS total_amount,
+    'green' AS service_type,
+    source_month,
+    ingest_ts
+FROM {{ source('bronze', 'green_trips_raw') }}
+WHERE lpep_pickup_datetime IS NOT NULL
+  AND lpep_dropoff_datetime IS NOT NULL

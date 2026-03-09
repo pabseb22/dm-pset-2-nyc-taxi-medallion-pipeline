@@ -1,0 +1,73 @@
+WITH trips AS (
+
+    SELECT
+        vendor_id,
+        pickup_datetime,
+        dropoff_datetime,
+        passenger_count,
+        trip_distance,
+        pu_location_id,
+        do_location_id,
+        payment_type,
+        fare_amount,
+        tip_amount,
+        total_amount,
+        service_type,
+        source_month,
+        ingest_ts
+    FROM {{ ref('silver_trips_unified') }}
+    WHERE pickup_datetime IS NOT NULL
+      AND pu_location_id IS NOT NULL
+      AND do_location_id IS NOT NULL
+
+),
+
+service_type_map AS (
+
+    SELECT *
+    FROM {{ ref('dim_service_type') }}
+
+),
+
+payment_type_map AS (
+
+    SELECT *
+    FROM {{ ref('dim_payment_type') }}
+
+)
+
+SELECT
+    ROW_NUMBER() OVER (ORDER BY pickup_datetime, pu_location_id, do_location_id) AS trip_key,
+
+    CAST(TO_CHAR(CAST(pickup_datetime AS DATE), 'YYYYMMDD') AS INTEGER) AS pickup_date_key,
+
+    pu_location_id AS pickup_zone_id,
+    do_location_id AS dropoff_zone_id,
+
+    st.service_type_key,
+    pt.payment_type_key,
+
+    vendor_id,
+    pickup_datetime,
+    dropoff_datetime,
+
+    EXTRACT(
+    EPOCH FROM (
+        CAST(dropoff_datetime AS TIMESTAMP) - CAST(pickup_datetime AS TIMESTAMP)
+    )
+) / 60.0 AS trip_duration_minutes
+
+    passenger_count,
+    trip_distance,
+    fare_amount,
+    tip_amount,
+    total_amount,
+
+    source_month,
+    ingest_ts
+
+FROM trips t
+LEFT JOIN service_type_map st
+    ON t.service_type = st.service_type
+LEFT JOIN payment_type_map pt
+    ON CAST(t.payment_type AS INTEGER) = pt.payment_type_key

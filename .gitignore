@@ -5,8 +5,27 @@
 mage/**/mage_data/
 mage/**/.mage/
 mage/**/logs/
+**/.variables/
+mage/mage_project/.profiles_interpolated_temp_*
+.file_versions/
 
 # Gitignore python template:
+
+# Mage runtime data
+.mage_data/
+.mage/
+
+# Logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# DBT artifacts (si usas dbt)
+target/
+dbt_packages/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

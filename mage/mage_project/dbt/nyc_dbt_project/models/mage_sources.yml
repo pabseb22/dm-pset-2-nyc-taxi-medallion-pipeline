@@ -1,0 +1,21 @@
+sources:
+- description: Dataframes Mage upstream blocks
+  loader: mage
+  name: mage_nyc_dbt_project
+  schema: public
+  tables:
+  - description: Dataframe for block `check_silver_pipeline` of the `db_build_gold`
+      mage pipeline.
+    identifier: mage_db_build_gold_check_silver_pipeline
+    meta:
+      block_uuid: check_silver_pipeline
+      pipeline_uuid: db_build_gold
+    name: db_build_gold_check_silver_pipeline
+  - description: Dataframe for block `check_bronze_pipeline` of the `dbt_build_silver`
+      mage pipeline.
+    identifier: mage_dbt_build_silver_check_bronze_pipeline
+    meta:
+      block_uuid: check_bronze_pipeline
+      pipeline_uuid: dbt_build_silver
+    name: dbt_build_silver_check_bronze_pipeline
+version: 2

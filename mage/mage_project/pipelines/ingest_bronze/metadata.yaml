@@ -1,36 +1,56 @@
 blocks:
 - all_upstream_blocks_executed: true
-  color: null
-  configuration: {}
+  color: purple
+  configuration:
+    file_path: custom/load_zones_and_prepare_bronze.py
+    file_source:
+      path: custom/load_zones_and_prepare_bronze.py
   downstream_blocks:
-  - export_trip_data
+  - load_yellow_range_bronze
   executor_config: null
   executor_type: local_python
   has_callback: false
   language: python
-  name: load_trip_data
+  name: load_zones_and_prepare_bronze
+  retry_config: null
+  status: executed
+  timeout: null
+  type: custom
+  upstream_blocks: []
+  uuid: load_zones_and_prepare_bronze
+- all_upstream_blocks_executed: true
+  color: purple
+  configuration: {}
+  downstream_blocks:
+  - load_green_range_bronze
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: load_yellow_range_bronze
   retry_config: null
   status: updated
   timeout: null
-  type: data_loader
-  upstream_blocks: []
-  uuid: load_trip_data
+  type: custom
+  upstream_blocks:
+  - load_zones_and_prepare_bronze
+  uuid: load_yellow_range_bronze
 - all_upstream_blocks_executed: false
-  color: null
+  color: purple
   configuration: {}
   downstream_blocks: []
   executor_config: null
   executor_type: local_python
   has_callback: false
   language: python
-  name: export_trip_data
+  name: load_green_range_bronze
   retry_config: null
   status: updated
   timeout: null
-  type: data_exporter
+  type: custom
   upstream_blocks:
-  - load_trip_data
-  uuid: export_trip_data
+  - load_yellow_range_bronze
+  uuid: load_green_range_bronze
 cache_block_output_in_memory: false
 callbacks: []
 concurrency_config: {}

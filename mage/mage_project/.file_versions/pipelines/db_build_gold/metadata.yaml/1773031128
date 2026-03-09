@@ -1,0 +1,68 @@
+blocks:
+- all_upstream_blocks_executed: true
+  color: null
+  configuration:
+    dbt_project_name: dbt/nyc_dbt_project
+    file_path: dbt/nyc_dbt_project/models/silver/silver_zones.sql
+    file_source:
+      path: dbt/nyc_dbt_project/models/silver/silver_zones.sql
+      project_path: dbt/nyc_dbt_project
+  downstream_blocks:
+  - dbt/nyc_dbt_project/models/gold/dim_zone
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: sql
+  name: dbt/nyc_dbt_project/models/silver/silver_zones
+  retry_config: null
+  status: not_executed
+  timeout: null
+  type: dbt
+  upstream_blocks: []
+  uuid: dbt/nyc_dbt_project/models/silver/silver_zones
+- all_upstream_blocks_executed: false
+  color: null
+  configuration:
+    dbt_project_name: dbt/nyc_dbt_project
+    file_path: dbt/nyc_dbt_project/models/gold/dim_zone.sql
+    file_source:
+      path: dbt/nyc_dbt_project/models/gold/dim_zone.sql
+      project_path: dbt/nyc_dbt_project
+    limit: 1000
+  downstream_blocks: []
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: sql
+  name: dbt/nyc_dbt_project/models/gold/dim_zone
+  retry_config: null
+  status: not_executed
+  timeout: null
+  type: dbt
+  upstream_blocks:
+  - dbt/nyc_dbt_project/models/silver/silver_zones
+  uuid: dbt/nyc_dbt_project/models/gold/dim_zone
+cache_block_output_in_memory: false
+callbacks: []
+concurrency_config: {}
+conditionals: []
+created_at: '2026-03-09 04:35:07.892052+00:00'
+data_integration: null
+description: null
+executor_config: {}
+executor_count: 1
+executor_type: null
+extensions: {}
+name: db_build_gold
+notification_config: {}
+remote_variables_dir: null
+retry_config: {}
+run_pipeline_in_one_process: false
+settings:
+  triggers: null
+spark_config: {}
+tags: []
+type: python
+uuid: db_build_gold
+variables_dir: /home/src/mage_project
+widgets: []

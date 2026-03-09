@@ -1,0 +1,25 @@
+SELECT
+
+    vendorid AS vendor_id,
+
+    tpep_pickup_datetime AS pickup_datetime,
+    tpep_dropoff_datetime AS dropoff_datetime,
+
+    passenger_count,
+    trip_distance,
+
+    pulocationid AS pu_location_id,
+    dolocationid AS do_location_id,
+
+    payment_type,
+
+    fare_amount,
+    tip_amount,
+    total_amount,
+
+    'yellow' AS service_type,
+
+    source_month,
+    ingest_ts
+
+FROM {{ source('bronze','yellow_trips_raw') }}

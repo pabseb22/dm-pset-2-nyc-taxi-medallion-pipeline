@@ -1,0 +1,20 @@
+WITH dates AS (
+
+    SELECT DISTINCT
+        CAST(pickup_datetime AS DATE) AS full_date
+    FROM {{ ref('silver_trips_unified') }}
+    WHERE pickup_datetime IS NOT NULL
+
+)
+
+SELECT
+    CAST(TO_CHAR(full_date, 'YYYYMMDD') AS INTEGER) AS date_key,
+    full_date,
+    EXTRACT(YEAR FROM full_date) AS year,
+    EXTRACT(MONTH FROM full_date) AS month,
+    TO_CHAR(full_date, 'Month') AS month_name,
+    EXTRACT(QUARTER FROM full_date) AS quarter,
+    EXTRACT(DAY FROM full_date) AS day_of_month,
+    EXTRACT(ISODOW FROM full_date) AS day_of_week,
+    TO_CHAR(full_date, 'Day') AS weekday_name
+FROM dates

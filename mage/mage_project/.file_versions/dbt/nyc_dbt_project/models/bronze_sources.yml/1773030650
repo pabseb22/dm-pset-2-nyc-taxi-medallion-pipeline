@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    tables:
+
+      - name: yellow_trips_raw
+
+      - name: green_trips_raw
+
+      - name: taxi_zone_lookup
+
+      - name: ingest_audit

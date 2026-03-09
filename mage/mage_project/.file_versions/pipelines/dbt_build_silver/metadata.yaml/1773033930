@@ -1,0 +1,135 @@
+blocks:
+- all_upstream_blocks_executed: true
+  color: null
+  configuration: {}
+  downstream_blocks:
+  - dbt/nyc_dbt_project/models/silver/silver_green_trips
+  - dbt/nyc_dbt_project/models/silver/silver_yellow_trips
+  - dbt/nyc_dbt_project/models/silver/silver_zones
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: python
+  name: check_bronze_pipeline
+  retry_config: null
+  status: executed
+  timeout: null
+  type: sensor
+  upstream_blocks: []
+  uuid: check_bronze_pipeline
+- all_upstream_blocks_executed: true
+  color: null
+  configuration:
+    dbt_project_name: dbt/nyc_dbt_project
+    file_path: dbt/nyc_dbt_project/models/silver/silver_green_trips.sql
+    file_source:
+      path: dbt/nyc_dbt_project/models/silver/silver_green_trips.sql
+      project_path: dbt/nyc_dbt_project
+    limit: 1000
+  downstream_blocks:
+  - dbt/nyc_dbt_project/models/silver/silver_trips_unified
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: sql
+  name: dbt/nyc_dbt_project/models/silver/silver_green_trips
+  retry_config: null
+  status: updated
+  timeout: null
+  type: dbt
+  upstream_blocks:
+  - check_bronze_pipeline
+  uuid: dbt/nyc_dbt_project/models/silver/silver_green_trips
+- all_upstream_blocks_executed: true
+  color: null
+  configuration:
+    dbt_project_name: dbt/nyc_dbt_project
+    file_path: dbt/nyc_dbt_project/models/silver/silver_yellow_trips.sql
+    file_source:
+      path: dbt/nyc_dbt_project/models/silver/silver_yellow_trips.sql
+      project_path: dbt/nyc_dbt_project
+    limit: 1000
+  downstream_blocks:
+  - dbt/nyc_dbt_project/models/silver/silver_trips_unified
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: sql
+  name: dbt/nyc_dbt_project/models/silver/silver_yellow_trips
+  retry_config: null
+  status: executed
+  timeout: null
+  type: dbt
+  upstream_blocks:
+  - check_bronze_pipeline
+  uuid: dbt/nyc_dbt_project/models/silver/silver_yellow_trips
+- all_upstream_blocks_executed: false
+  color: null
+  configuration:
+    dbt_project_name: dbt/nyc_dbt_project
+    file_path: dbt/nyc_dbt_project/models/silver/silver_trips_unified.sql
+    file_source:
+      path: dbt/nyc_dbt_project/models/silver/silver_trips_unified.sql
+      project_path: dbt/nyc_dbt_project
+    limit: 1000
+  downstream_blocks: []
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: sql
+  name: dbt/nyc_dbt_project/models/silver/silver_trips_unified
+  retry_config: null
+  status: executed
+  timeout: null
+  type: dbt
+  upstream_blocks:
+  - dbt/nyc_dbt_project/models/silver/silver_yellow_trips
+  - dbt/nyc_dbt_project/models/silver/silver_green_trips
+  uuid: dbt/nyc_dbt_project/models/silver/silver_trips_unified
+- all_upstream_blocks_executed: true
+  color: null
+  configuration:
+    dbt_project_name: dbt/nyc_dbt_project
+    file_path: dbt/nyc_dbt_project/models/silver/silver_zones.sql
+    file_source:
+      path: dbt/nyc_dbt_project/models/silver/silver_zones.sql
+      project_path: dbt/nyc_dbt_project
+    limit: 1000
+  downstream_blocks: []
+  executor_config: null
+  executor_type: local_python
+  has_callback: false
+  language: sql
+  name: dbt/nyc_dbt_project/models/silver/silver_zones
+  retry_config: null
+  status: executed
+  timeout: null
+  type: dbt
+  upstream_blocks:
+  - check_bronze_pipeline
+  uuid: dbt/nyc_dbt_project/models/silver/silver_zones
+cache_block_output_in_memory: false
+callbacks: []
+concurrency_config: {}
+conditionals: []
+created_at: '2026-03-08 16:31:14.569645+00:00'
+data_integration: null
+description: null
+executor_config: {}
+executor_count: 1
+executor_type: null
+extensions: {}
+name: dbt_build_silver
+notification_config: {}
+remote_variables_dir: null
+retry_config: {}
+run_pipeline_in_one_process: false
+settings:
+  triggers: null
+spark_config: {}
+tags:
+- silver
+type: python
+uuid: dbt_build_silver
+variables_dir: /home/src/mage_project
+widgets: []

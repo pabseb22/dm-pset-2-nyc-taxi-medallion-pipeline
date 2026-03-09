@@ -1,0 +1,150 @@
+if 'data_loader' not in globals():
+    from mage_ai.data_preparation.decorators import data_loader
+if 'test' not in globals():
+    from mage_ai.data_preparation.decorators import test
+
+import os
+from io import BytesIO
+import pandas as pd
+import requests
+
+
+def month_range(start_month: str, end_month: str):
+    start = pd.Period(start_month, freq='M')
+    end = pd.Period(end_month, freq='M')
+
+    if start > end:
+        raise ValueError('INGEST_START_MONTH cannot be greater than INGEST_END_MONTH')
+
+    return [m.strftime('%Y-%m') for m in pd.period_range(start=start, end=end, freq='M')]
+
+
+def build_trip_url(base_url: str, service_type: str, year_month: str) -> str:
+    return f'{base_url}/{service_type}_tripdata_{year_month}.parquet'
+
+
+def download_parquet(url: str) -> pd.DataFrame:
+    response = requests.get(url, timeout=120)
+    if response.status_code == 404:
+        raise FileNotFoundError(f'File not found: {url}')
+    response.raise_for_status()
+    return pd.read_parquet(BytesIO(response.content))
+
+
+@data_loader
+def load_data(*args, **kwargs):
+    base_url = os.getenv('NYC_TLC_BASE_URL')
+    zone_url = os.getenv('NYC_TLC_ZONE_URL')
+    start_month = os.getenv('INGEST_START_MONTH')
+    end_month = os.getenv('INGEST_END_MONTH')
+
+    if not base_url:
+        raise ValueError('NYC_TLC_BASE_URL is missing')
+    if not zone_url:
+        raise ValueError('NYC_TLC_ZONE_URL is missing')
+    if not start_month or not end_month:
+        raise ValueError('INGEST_START_MONTH / INGEST_END_MONTH are missing')
+
+    ingest_ts = pd.Timestamp.utcnow().tz_localize(None)
+    service_types = ['yellow', 'green']
+
+    trip_dfs = {
+        'yellow': [],
+        'green': [],
+    }
+    audit_rows = []
+
+    for ym in month_range(start_month, end_month):
+        for service_type in service_types:
+            url = build_trip_url(base_url, service_type, ym)
+
+            try:
+                df = download_parquet(url)
+
+                df['ingest_ts'] = ingest_ts
+                df['source_month'] = ym
+                df['service_type'] = service_type
+
+                df.columns = [c.lower() for c in df.columns]
+                trip_dfs[service_type].append(df)
+
+                audit_rows.append({
+                    'year_month': ym,
+                    'service_type': service_type,
+                    'status': 'loaded',
+                    'row_count': int(len(df)),
+                    'source_url': url,
+                    'error_message': None,
+                    'ingest_ts': ingest_ts,
+                })
+
+            except FileNotFoundError as e:
+                audit_rows.append({
+                    'year_month': ym,
+                    'service_type': service_type,
+                    'status': 'missing',
+                    'row_count': 0,
+                    'source_url': url,
+                    'error_message': str(e),
+                    'ingest_ts': ingest_ts,
+                })
+
+            except Exception as e:
+                audit_rows.append({
+                    'year_month': ym,
+                    'service_type': service_type,
+                    'status': 'failed',
+                    'row_count': 0,
+                    'source_url': url,
+                    'error_message': str(e)[:1000],
+                    'ingest_ts': ingest_ts,
+                })
+
+    yellow_df = pd.concat(trip_dfs['yellow'], ignore_index=True) if trip_dfs['yellow'] else pd.DataFrame()
+    green_df = pd.concat(trip_dfs['green'], ignore_index=True) if trip_dfs['green'] else pd.DataFrame()
+
+    zones_df = pd.read_csv(zone_url)
+    zones_df.columns = [c.lower() for c in zones_df.columns]
+    zones_df['ingest_ts'] = ingest_ts
+
+    audit_df = pd.DataFrame(audit_rows)
+    audit_df.columns = [c.lower() for c in audit_df.columns]
+
+    if yellow_df.empty and green_df.empty:
+        raise ValueError('No trip files were loaded for any service/month')
+
+    return {
+        'yellow_trips_df': yellow_df,
+        'green_trips_df': green_df,
+        'zones_df': zones_df,
+        'audit_df': audit_df,
+    }
+
+
+@test
+def test_output(output, *args) -> None:
+    assert output is not None, 'The output is undefined'
+    assert 'yellow_trips_df' in output, 'Missing yellow_trips_df'
+    assert 'green_trips_df' in output, 'Missing green_trips_df'
+    assert 'zones_df' in output, 'Missing zones_df'
+    assert 'audit_df' in output, 'Missing audit_df'
+
+    assert not output['audit_df'].empty, 'audit_df is empty'
+    assert 'status' in output['audit_df'].columns, 'status missing in audit_df'
+    assert 'year_month' in output['audit_df'].columns, 'year_month missing in audit_df'
+    assert 'service_type' in output['audit_df'].columns, 'service_type missing in audit_df'
+
+    valid_status = {'loaded', 'missing', 'failed'}
+    assert set(output['audit_df']['status'].dropna().unique()).issubset(valid_status), 'Invalid audit status found'
+
+    if not output['yellow_trips_df'].empty:
+        for col in ['ingest_ts', 'source_month', 'service_type']:
+            assert col in output['yellow_trips_df'].columns, f'{col} missing in yellow_trips_df'
+        assert set(output['yellow_trips_df']['service_type'].dropna().unique()) == {'yellow'}
+
+    if not output['green_trips_df'].empty:
+        for col in ['ingest_ts', 'source_month', 'service_type']:
+            assert col in output['green_trips_df'].columns, f'{col} missing in green_trips_df'
+        assert set(output['green_trips_df']['service_type'].dropna().unique()) == {'green'}
+
+    assert 'locationid' in output['zones_df'].columns, 'locationid missing in zones_df'

@@ -1,0 +1,25 @@
+from mage_ai.orchestration.run_status_checker import check_status
+
+if 'sensor' not in globals():
+    from mage_ai.data_preparation.decorators import sensor
+
+
+@sensor
+def check_condition(*args, **kwargs) -> bool:
+    execution_date = kwargs.get('execution_date')
+    if not execution_date:
+        return False
+
+    bronze_ok = check_status(
+        'ingest_bronze',
+        execution_date,
+        hours=24,
+    )
+
+    silver_already_ran = check_status(
+        'dbt_build_silver',   # reemplaza por el UUID real de tu silver
+        execution_date,
+        hours=24,
+    )
+
+    return bronze_ok and not silver_already_ran
